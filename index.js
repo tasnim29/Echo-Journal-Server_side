@@ -22,16 +22,29 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
+
+    const blogsCollection = client.db("blog-website").collection("blogs");
+
+    // add blog
+    app.post("/blogs", async (req, res) => {
+      const newBlog = req.body;
+      const result = await blogsCollection.insertOne(newBlog);
+      res.send(result);
+    });
+    //get 6 blogs in recent blogs
+    app.get("/blogs", async (req, res) => {
+      const cursor = await blogsCollection.find().limit(6).toArray();
+      res.send(cursor);
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
