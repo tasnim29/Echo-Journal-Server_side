@@ -90,6 +90,23 @@ async function run() {
       }
       res.send(allWishlist);
     });
+    // add comments
+    app.post("/comments/:blogId", async (req, res) => {
+      const id = req.params.blogId;
+      const commentsData = req.body;
+      console.log(commentsData);
+      const result = await commentsCollection.insertOne(commentsData);
+      res.send(result);
+    });
+    // get comments for the specific blog
+    app.get("/comments/:blogId", async (req, res) => {
+      const blogId = req.params.blogId;
+      const filter = {
+        blogId: blogId,
+      };
+      const result = await commentsCollection.find(filter).toArray();
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
