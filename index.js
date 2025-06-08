@@ -39,7 +39,16 @@ async function run() {
     });
     //get all blogs in  all blogs page
     app.get("/allBlogs", async (req, res) => {
-      const cursor = await blogsCollection.find().toArray();
+      const { searchParams, category } = req.query;
+      let query = {};
+      if (searchParams) {
+        query.title = { $regex: searchParams, $options: "i" };
+      }
+
+      if (category) {
+        query.category = category;
+      }
+      const cursor = await blogsCollection.find(query).toArray();
       res.send(cursor);
     });
 
