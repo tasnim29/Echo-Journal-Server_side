@@ -37,6 +37,11 @@ async function run() {
       const cursor = await blogsCollection.find().limit(6).toArray();
       res.send(cursor);
     });
+    //get all blogs in  all blogs page
+    app.get("/allBlogs", async (req, res) => {
+      const cursor = await blogsCollection.find().toArray();
+      res.send(cursor);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
