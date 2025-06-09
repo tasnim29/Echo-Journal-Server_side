@@ -62,6 +62,16 @@ async function run() {
       const cursor = await blogsCollection.find(query).toArray();
       res.send(cursor);
     });
+    // update blog
+    app.put("/blogs/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedBlog = req.body;
+      const options = { upsert: true };
+      const update = { $set: updatedBlog };
+      const result = await blogsCollection.updateOne(filter, update, options);
+      res.send(result);
+    });
     // add wishlist
     app.post("/wishlist/:blogId", async (req, res) => {
       const id = req.params.blogId;
