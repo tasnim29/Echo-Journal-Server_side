@@ -62,6 +62,19 @@ async function run() {
       const cursor = await blogsCollection.find(query).toArray();
       res.send(cursor);
     });
+    // top 10 blogs for featured blogs
+    app.get("/topBlogs", async (req, res) => {
+      const blogs = await blogsCollection.find({}).toArray();
+      const topBlogs = blogs
+        .map((blog) => ({
+          ...blog,
+          wordCount: blog.long?.trim().split(/\s+/).length || 0,
+        }))
+        .sort((a, b) => b.wordCount - a.wordCount)
+        .slice(0, 10);
+
+      res.json(topBlogs);
+    });
     // update blog
     app.put("/blogs/:id", async (req, res) => {
       const id = req.params.id;
