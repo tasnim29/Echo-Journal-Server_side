@@ -20,9 +20,43 @@ const client = new MongoClient(uri, {
   },
 });
 
+const admin = require("firebase-admin");
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+  "utf-8"
+);
+
+// console.log(process.env.FB_SERVICE_KEY.length);
+// console.log(decoded);
+const serviceAccount = JSON.parse(decoded);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
+// jwt middleware
+const verifyJWT = async (req, res, next) => {
+  const authHeader = req.headers?.authorization;
+  // check if token available
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).send({ message: "Unauthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+
+  // check if token is valid
+  try {
+    const decoded = await admin.auth().verifyIdToken(token);
+    req.decoded = decoded;
+    console.log("decoded token", decoded);
+
+    next();
+  } catch (error) {
+    return res.status(401).send({ message: "Unauthorized access" });
+  }
+  // console.log(token);
+};
+
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const blogsCollection = client.db("blog-website").collection("blogs");
     const wishlistsCollection = client
@@ -93,9 +127,14 @@ async function run() {
       const result = await wishlistsCollection.insertOne(wishlistData);
       res.send(result);
     });
-    // get all wishlist by user email
-    app.get("/myWishlist/:email", async (req, res) => {
+
+    // get all wishlist by user email(applied jwt)
+    app.get("/myWishlist/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
+
+      if (email !== req.decoded.email) {
+        return res.status(403).message({ message: "forbidden access" });
+      }
       const filter = {
         userEmail: email,
       };
@@ -131,10 +170,10 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
