@@ -4,11 +4,21 @@ require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// firebase admin
+const admin = require("firebase-admin");
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+  "utf-8"
+);
+// console.log(process.env.FB_SERVICE_KEY.length);
+// console.log(decoded);
+const serviceAccount = JSON.parse(decoded);
+
 // middleware
 app.use(cors());
 app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.bcspfgx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -20,14 +30,6 @@ const client = new MongoClient(uri, {
   },
 });
 
-const admin = require("firebase-admin");
-const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
-  "utf-8"
-);
-
-// console.log(process.env.FB_SERVICE_KEY.length);
-// console.log(decoded);
-const serviceAccount = JSON.parse(decoded);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -64,9 +66,13 @@ async function run() {
       .collection("wishlist");
     const commentsCollection = client.db("blog-website").collection("comments");
 
-    // add blog
-    app.post("/blogs", async (req, res) => {
+    // add blog(Only authenticated users can add a blog )
+    app.post("/blogs", verifyJWT, async (req, res) => {
       const newBlog = req.body;
+      // console.log("New blog received:", newBlog);
+      // console.log("Decoded user email:", req.decoded?.email);
+      newBlog.email = req.decoded.email;
+      console.log("New blog with email received:", newBlog);
       const result = await blogsCollection.insertOne(newBlog);
       res.send(result);
     });
@@ -96,6 +102,7 @@ async function run() {
       const cursor = await blogsCollection.find(query).toArray();
       res.send(cursor);
     });
+
     // top 10 blogs for featured blogs
     app.get("/topBlogs", async (req, res) => {
       const blogs = await blogsCollection.find({}).toArray();
@@ -131,9 +138,10 @@ async function run() {
     // get all wishlist by user email(applied jwt)
     app.get("/myWishlist/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
+      console.log("this is", email, req.decoded.email);
 
       if (email !== req.decoded.email) {
-        return res.status(403).message({ message: "forbidden access" });
+        return res.status(403).send({ message: "forbidden access" });
       }
       const filter = {
         userEmail: email,
