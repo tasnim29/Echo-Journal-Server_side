@@ -117,7 +117,7 @@ async function run() {
       res.json(topBlogs);
     });
     // update blog
-    app.put("/blogs/:id", async (req, res) => {
+    app.put("/blogs/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedBlog = req.body;
