@@ -160,6 +160,13 @@ async function run() {
       }
       res.send(allWishlist);
     });
+    // delete wishlist
+    app.delete("/wishlist/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistsCollection.deleteOne(query);
+      res.send(result);
+    });
     // add comments
     app.post("/comments/:blogId", async (req, res) => {
       const id = req.params.blogId;
