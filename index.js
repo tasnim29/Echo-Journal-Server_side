@@ -47,7 +47,7 @@ const verifyJWT = async (req, res, next) => {
   try {
     const decoded = await admin.auth().verifyIdToken(token);
     req.decoded = decoded;
-    console.log("decoded token", decoded);
+    // console.log("decoded token", decoded);
 
     next();
   } catch (error) {
@@ -72,7 +72,7 @@ async function run() {
       // console.log("New blog received:", newBlog);
       // console.log("Decoded user email:", req.decoded?.email);
       newBlog.email = req.decoded.email;
-      console.log("New blog with email received:", newBlog);
+      // console.log("New blog with email received:", newBlog);
       const result = await blogsCollection.insertOne(newBlog);
       res.send(result);
     });
@@ -138,7 +138,7 @@ async function run() {
     // get all wishlist by user email(applied jwt)
     app.get("/myWishlist/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      console.log("this is", email, req.decoded.email);
+      // console.log("this is", email, req.decoded.email);
 
       if (email !== req.decoded.email) {
         return res.status(403).send({ message: "forbidden access" });
