@@ -78,7 +78,7 @@ async function run() {
     });
     //get 6 blogs in recent blogs
     app.get("/blogs", async (req, res) => {
-      const cursor = await blogsCollection.find().limit(6).toArray();
+      const cursor = await blogsCollection.find().limit(8).toArray();
       res.send(cursor);
     });
     // get blogs by id for blog details page
